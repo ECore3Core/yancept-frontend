@@ -12,7 +12,7 @@
         <h3>Выберите преподавателя:</h3>
         <div class="card-container">
           <router-link v-for="teacher in teachers" :key="teacher.id" :to="`/teacher/${teacher.id}`" class="card">
-            <img :src="teacher.photoUrl || 'default-photo.jpg'" alt="Фото преподавателя" class="card-photo" />
+            <!--<img :src="teacher.photoUrl || 'default-photo.jpg'" alt="Фото преподавателя" class="card-photo" />-->
             <div class="card-content">
               <h2>{{ teacher.secondName }} {{ teacher.firstName }} {{ teacher.patronymic }}</h2>
               <p>{{ teacher.description }}</p>

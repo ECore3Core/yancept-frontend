@@ -3,7 +3,7 @@
       <button @click="$router.push('/')">Назад</button>
       <h2>Детали преподавателя</h2>
   
-      <img v-if="teacher.photoUrl" :src="teacher.photoUrl" alt="Фото преподавателя" class="profile-photo" />
+      <!--<img v-if="teacher.photoUrl" :src="teacher.photoUrl" alt="Фото преподавателя" class="profile-photo" />-->
       <div class="card-content">
         <h2>{{ teacher.secondName }} {{ teacher.firstName }} {{ teacher.patronymic }}</h2>
         <p>подробная инфа </p>
