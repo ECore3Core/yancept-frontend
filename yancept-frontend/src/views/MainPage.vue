@@ -1,7 +1,6 @@
 <template>
-  <main>
   <div class="main-page">
-    <h2>Список преподавателей</h2>
+    <h1>Список преподавателей</h1>
     <div class="card-container">
       <router-link
         v-for="teacher in teachers"
@@ -17,7 +16,6 @@
       </router-link>
     </div>
   </div>
-</main>
 </template>
 
 <script>
@@ -29,7 +27,7 @@ export default {
   setup() {
     const teachers = ref([])
 
-    // Функция для получения списка преподавателей с backend сервера
+    // Получаем список преподавателей с backend-сервера
     const fetchTeachers = async () => {
       try {
         const response = await axios.get('https://your-backend-api.com/api/teachers')
@@ -61,7 +59,6 @@ export default {
   gap: 20px;
 }
 
-/* Стили карточки */
 .card {
   display: block;
   width: 250px;
