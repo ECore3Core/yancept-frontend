@@ -1,16 +1,18 @@
 <template>
-  <div class="content">
-  <div v-if="teacher">
-
+  <div class="teacher-profile" v-if="teacher">
     <button @click="$router.push('/')">Назад</button>
     <h2>Детали преподавателя</h2>
-    <!-- Здесь информация о преподавателе -->
-    <h1>{{ teacher.lastName }} {{ teacher.firstName }} {{ teacher.middleName }}</h1>
-    <img :src="teacher.photoUrl" alt="Фото преподавателя" class="profile-photo" />
-    <p>{{ teacher.description }}</p>
-    <ul>
+
+    <img v-if="teacher.photoUrl" :src="teacher.photoUrl" alt="Фото преподавателя" class="profile-photo" />
+    <div class="card-content">
+      <h2>{{ teacher.secondName }} {{ teacher.firstName }} {{ teacher.patronymic }}</h2>
+      <p>подробная инфа </p>
+    </div>
+
+    <ul v-if="teacher?.topics?.length">
       <li v-for="topic in teacher.topics" :key="topic">{{ topic }}</li>
     </ul>
+    <input type="text">
     <button @click="submitApplication" v-if="!applicationSent">Подать заявку</button>
     <button @click="cancelApplication" v-else>Отменить заявку</button>
     <p v-if="applicationMessage" class="status-message">{{ applicationMessage }}</p>
@@ -19,7 +21,6 @@
   <div v-else>
     <p>Загрузка данных...</p>
   </div>
-</div>
 </template>
 
 <script>
@@ -37,16 +38,17 @@ export default {
     const applicationMessage = ref("")
 
     const fetchTeacher = async () => {
-      try {
-        const response = await axios.get(`https://your-backend-api.com/api/teachers/${route.params.id}`)
-        console.log("Полученные данные о преподавателе:", response.data) // <-- Проверка данных
-        teacher.value = response.data
-      } catch (error) {
-        console.warn('Бэкенд недоступен, загружаем мок-данные')
-        teacher.value = mockTeachers.find(t => t.id == route.params.id)
-        console.log("Загружены мок-данные:", teacher.value) // <-- Проверка мок-данных
-      }
-    }
+  try {
+    const response = await axios.get(`http://localhost:8080/teacher/${route.params.id}`);
+    console.log("Полученные данные о преподавателе:", response.data);
+    teacher.value = response.data; // Просто присваиваем объект
+  } catch (error) {
+    console.warn('Бэкенд недоступен, загружаем мок-данные');
+    teacher.value = mockTeachers.find(t => t.id == route.params.id);
+    console.log("Загружены мок-данные:", teacher.value);
+  }
+};
+
 
     const submitApplication = async () => {
       try {
