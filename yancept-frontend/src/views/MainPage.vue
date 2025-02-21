@@ -1,6 +1,7 @@
 <template>
+  <main>
   <div class="main-page">
-    <h1>Список преподавателей</h1>
+    <h2>Список преподавателей</h2>
     <div class="card-container">
       <router-link
         v-for="teacher in teachers"
@@ -16,6 +17,7 @@
       </router-link>
     </div>
   </div>
+</main>
 </template>
 
 <script>
