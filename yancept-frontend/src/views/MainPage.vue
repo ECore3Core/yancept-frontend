@@ -24,9 +24,11 @@
         <input type="number" v-model="idTeacher" placeholder="Введите ваш ID" class="input-field">
         <h2>Студенты</h2>
         <button @click="fetchStudents" class="action-button">Загрузить студентов</button>
+
+        <!-- Студенты на рассмотрении -->
         <h3>Список студентов, которые хотят к вам пойти:</h3>
         <div class="card-container">
-          <router-link v-for="student in students" :key="student.id" :to="`/student/${student.id}`" class="card">
+          <router-link v-for="student in pendingStudents" :key="student.id" :to="`/student/${student.id}`" class="card">
             <div class="card-content">
               <h2>{{ student.secondName }} {{ student.firstName }} {{ student.patronymic }}</h2>
               <p>{{ student.description }}</p>
@@ -34,7 +36,18 @@
             </div>
           </router-link>
         </div>
+
+        <!-- Принятые студенты -->
         <h3>Список принятых вами студентов:</h3>
+        <div class="card-container">
+          <router-link v-for="student in acceptedStudents" :key="student.id" :to="`/student/${student.id}`" class="card">
+            <div class="card-content">
+              <h2>{{ student.secondName }} {{ student.firstName }} {{ student.patronymic }}</h2>
+              <p>{{ student.description }}</p>
+              <p>{{ student.courseName }}</p>
+            </div>
+          </router-link>
+        </div>
       </div>
     </div>
   </main>
@@ -49,7 +62,8 @@ export default {
   name: 'MainPage',
   setup() {
     const teachers = ref([]);
-    const students = ref([]);
+    const pendingStudents = ref([]); // Студенты на рассмотрении
+    const acceptedStudents = ref([]); // Принятые студенты
     const role = ref('student'); // Режим по умолчанию – студент
     const idStudent = ref("");
     const idTeacher = ref("");
@@ -70,14 +84,22 @@ export default {
         console.warn('Введите ID преподавателя');
         return;
       }
+
       try {
-        const response = await axios.get(`http://localhost:8080/request/in-process/teacher/${idTeacher.value}`);
-        console.log(idTeacher.value);
-        console.log('Полученные данные студентов:', response.data);
-        students.value = response.data;
+        // Загрузка студентов на рассмотрении
+        const pendingResponse = await axios.get(`http://localhost:8080/request/in-process/teacher/${idTeacher.value}`);
+        pendingStudents.value = pendingResponse.data;
+
+        // Загрузка принятых студентов
+        const acceptedResponse = await axios.get(`http://localhost:8080/student/accepted/teacher/${idTeacher.value}`);
+        acceptedStudents.value = acceptedResponse.data;
+
+        console.log('Студенты на рассмотрении:', pendingStudents.value);
+        console.log('Принятые студенты:', acceptedStudents.value);
       } catch (error) {
         console.warn('Ошибка при загрузке студентов, загружаем мок-данные', error);
-        students.value = mockStudents;
+        pendingStudents.value = mockStudents;
+        acceptedStudents.value = mockStudents;
       }
     };
 
@@ -89,8 +111,17 @@ export default {
       fetchTeachers();
     });
 
-    return { teachers, students, role, setRole, idStudent, idTeacher, fetchStudents };
-  }
+    return {
+      teachers,
+      pendingStudents,
+      acceptedStudents,
+      role,
+      setRole,
+      idStudent,
+      idTeacher,
+      fetchStudents,
+    };
+  },
 };
 </script>
 
