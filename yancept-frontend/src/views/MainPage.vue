@@ -50,7 +50,7 @@ export default {
   setup() {
     const teachers = ref([])
     const students = ref([])
-    const role = ref('student')  // Переключение ролей
+    const role = ref('student')  // Режим по умолчанию – студент
 
     const fetchTeachers = async () => {
       try {
@@ -89,6 +89,7 @@ export default {
 <style scoped>
 .main-page {
   padding: 20px;
+  font-family: Arial, sans-serif;
 }
 
 .role-switcher {
@@ -99,11 +100,17 @@ export default {
   margin-right: 10px;
   padding: 8px 16px;
   cursor: pointer;
+  border: 1px solid #007bff;
+  background-color: #fff;
+  color: #007bff;
+  border-radius: 4px;
+  transition: background-color 0.2s, color 0.2s;
 }
 
-.role-switcher button.active {
+.role-switcher button.active,
+.role-switcher button:hover {
   background-color: #007bff;
-  color: white;
+  color: #fff;
 }
 
 .card-container {
@@ -145,5 +152,11 @@ export default {
 .card-content p {
   font-size: 0.9em;
   color: #555;
+}
+
+.card-content ul {
+  list-style: disc;
+  margin: 10px 0 0 20px;
+  padding: 0;
 }
 </style>
