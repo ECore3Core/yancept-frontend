@@ -1,12 +1,12 @@
 <template>
   <main>
     <div class="main-page">
-      <h2>Список преподавателей</h2>
       <div class="role-switcher">
+        <p>Выберите вашу роль:</p>
         <button @click="setRole('student')" :class="{ active: role === 'student' }">Студент</button>
         <button @click="setRole('teacher')" :class="{ active: role === 'teacher' }">Преподаватель</button>
       </div>
-
+      <h2>Список преподавателей</h2>
       <div v-if="role === 'student'">
         <h3>Выберите преподавателя:</h3>
         <div class="card-container">

@@ -1,200 +1,102 @@
 <template>
-  <div class="teacher-page">
-    <div class="header">
-      <img :src="teacher.photoUrl" alt="Фото преподавателя" class="teacher-photo" />
-      <div class="teacher-info">
-        <h1>{{ teacher.lastName }} {{ teacher.firstName }} {{ teacher.middleName }}</h1>
-      </div>
-    </div>
+  <div class="content">
+  <div v-if="teacher">
 
-    <div class="topics">
-      <h2>Доступные темы проектов</h2>
-      <ul>
-        <li 
-          v-for="topic in teacher.topics" 
-          :key="topic.id" 
-          :class="{ active: selectedTopic && selectedTopic.id === topic.id }"
-          @click="selectTopic(topic)"
-        >
-          {{ topic.name }}
-        </li>
-      </ul>
-    </div>
-
-    <div class="application">
-      <h2>Сопроводительное письмо</h2>
-      <textarea v-model="coverLetter" placeholder="Напишите сопроводительное письмо..."></textarea>
-      <button @click="submitApplication">Подать заявку</button>
-    </div>
+    <button @click="$router.push('/')">Назад</button>
+    <h2>Детали преподавателя</h2>
+    <!-- Здесь информация о преподавателе -->
+    <h1>{{ teacher.lastName }} {{ teacher.firstName }} {{ teacher.middleName }}</h1>
+    <img :src="teacher.photoUrl" alt="Фото преподавателя" class="profile-photo" />
+    <p>{{ teacher.description }}</p>
+    <ul>
+      <li v-for="topic in teacher.topics" :key="topic">{{ topic }}</li>
+    </ul>
+    <button @click="submitApplication" v-if="!applicationSent">Подать заявку</button>
+    <button @click="cancelApplication" v-else>Отменить заявку</button>
+    <p v-if="applicationMessage" class="status-message">{{ applicationMessage }}</p>
   </div>
+
+  <div v-else>
+    <p>Загрузка данных...</p>
+  </div>
+</div>
 </template>
 
 <script>
 import { ref, onMounted } from 'vue'
-import axios from 'axios'
 import { useRoute } from 'vue-router'
+import axios from 'axios'
+import { mockTeachers } from '../types.js'
 
 export default {
-  name: 'TeacherPage',
+  name: 'TeacherProfile',
   setup() {
     const route = useRoute()
-    const teacher = ref({
-      id: null,
-      photoUrl: '',
-      firstName: '',
-      lastName: '',
-      middleName: '',
-      topics: []
-    })
-    const selectedTopic = ref(null)
-    const coverLetter = ref('')
+    const teacher = ref(null)
+    const applicationSent = ref(false)
+    const applicationMessage = ref("")
 
     const fetchTeacher = async () => {
-      const teacherId = route.params.id
       try {
-        // Замените URL на актуальный адрес API для получения данных преподавателя
-        const response = await axios.get(`https://your-backend-api.com/api/teachers/${teacherId}`)
+        const response = await axios.get(`https://your-backend-api.com/api/teachers/${route.params.id}`)
+        console.log("Полученные данные о преподавателе:", response.data) // <-- Проверка данных
         teacher.value = response.data
       } catch (error) {
-        console.error('Ошибка загрузки данных преподавателя:', error)
-        // Для демонстрации можно использовать заглушку, если данные не загрузились
-        teacher.value = {
-          id: teacherId,
-          photoUrl: 'https://via.placeholder.com/150',
-          firstName: 'Имя',
-          lastName: 'Фамилия',
-          middleName: 'Отчество',
-          topics: [
-            { id: 1, name: 'Тема 1' },
-            { id: 2, name: 'Тема 2' },
-            { id: 3, name: 'Тема 3' }
-          ]
-        }
+        console.warn('Бэкенд недоступен, загружаем мок-данные')
+        teacher.value = mockTeachers.find(t => t.id == route.params.id)
+        console.log("Загружены мок-данные:", teacher.value) // <-- Проверка мок-данных
       }
     }
 
-    const selectTopic = (topic) => {
-      selectedTopic.value = topic
-    }
-
-    const submitApplication = () => {
-      if (!selectedTopic.value) {
-        alert('Пожалуйста, выберите тему проекта.')
-        return
+    const submitApplication = async () => {
+      try {
+        await axios.post('https://your-backend-api.com/api/applications', { teacherId: teacher.value.id })
+        applicationSent.value = true
+        applicationMessage.value = "Заявка успешно отправлена!"
+      } catch (error) {
+        applicationMessage.value = "Ошибка отправки заявки"
       }
-      const applicationData = {
-        teacherId: teacher.value.id,
-        topicId: selectedTopic.value.id,
-        coverLetter: coverLetter.value
+    }
+
+    const cancelApplication = async () => {
+      try {
+        await axios.delete(`https://your-backend-api.com/api/applications/${teacher.value.id}`)
+        applicationSent.value = false
+        applicationMessage.value = "Заявка отменена"
+      } catch (error) {
+        applicationMessage.value = "Ошибка отмены заявки"
       }
-      // Замените URL на актуальный адрес API для отправки заявки
-      axios.post('https://your-backend-api.com/api/applications', applicationData)
-        .then(() => {
-          alert('Заявка успешно отправлена!')
-        })
-        .catch(error => {
-          console.error('Ошибка отправки заявки:', error)
-          alert('Ошибка отправки заявки.')
-        })
     }
 
-    onMounted(() => {
-      fetchTeacher()
-    })
+    onMounted(fetchTeacher)
 
-    return {
-      teacher,
-      selectedTopic,
-      coverLetter,
-      selectTopic,
-      submitApplication
-    }
+    return { teacher, applicationSent, applicationMessage, submitApplication, cancelApplication }
   }
 }
 </script>
 
 <style scoped>
-.teacher-page {
-  max-width: 800px;
-  margin: 0 auto;
+.teacher-profile {
   padding: 20px;
-  font-family: Arial, sans-serif;
 }
 
-.header {
-  display: flex;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.teacher-photo {
-  width: 150px;
-  height: 150px;
+.profile-photo {
+  width: 200px;
+  height: 200px;
   object-fit: cover;
-  border-radius: 8px;
-  margin-right: 20px;
+  border-radius: 50%;
 }
 
-.teacher-info h1 {
-  font-size: 1.8em;
-  margin: 0;
+.content {
+  flex: 1;
+  /* Занимает оставшееся пространство */
+  padding: 20px;
+  overflow-y: auto;
+  /* Добавьте прокрутку, если контент слишком длинный */
 }
 
-.topics {
-  margin-bottom: 20px;
-}
-
-.topics h2 {
-  margin-bottom: 10px;
-}
-
-.topics ul {
-  list-style: none;
-  padding: 0;
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.topics li {
-  padding: 10px 15px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.2s, border-color 0.2s;
-}
-
-.topics li.active {
-  background-color: #42b983;
-  color: #fff;
-  border-color: #42b983;
-}
-
-.application h2 {
-  margin-bottom: 10px;
-}
-
-.application textarea {
-  width: 100%;
-  height: 100px;
-  resize: vertical;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-family: inherit;
-  margin-bottom: 10px;
-}
-
-.application button {
-  padding: 10px 20px;
-  background-color: #42b983;
-  border: none;
-  color: white;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.application button:hover {
-  background-color: #369d75;
+.status-message {
+  margin-top: 10px;
+  color: green;
 }
 </style>

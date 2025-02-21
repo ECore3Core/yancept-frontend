@@ -3,7 +3,10 @@
     <TheHeader class="header" />
     <div class="content-wrapper">
       <SideMenu class="sidebar" />
-      <MainPage class="main" />
+      <div class="main">
+        <router-view v-if="$route.name === 'TeacherPage'" />
+        <MainPage v-else />
+      </div>
     </div>
   </div>
 </template>
