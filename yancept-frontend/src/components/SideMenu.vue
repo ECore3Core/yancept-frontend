@@ -87,7 +87,7 @@
                                 <summary class="menu__header">НИР</summary>
                                 <ul class="submenu">
                                     <li class="submenu__item">
-                                        <a class="submenu__link" href="/research/patents">Патенты</a>
+                                        <a class="submenu__link" href="/research/nir">Выбор преподавателя/студента на НИР</a>
                                     </li>
                                 </ul>
                             </details>
@@ -117,7 +117,9 @@ export default {
     padding: 20px;
     box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
 }
-
+.sidebar__container{
+    margin-top: 12vh;
+}
 .content {
     margin-left: 270px; /* Отступ слева, чтобы контент не накладывался */
     padding: 20px;

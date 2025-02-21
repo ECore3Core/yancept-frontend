@@ -1,10 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import MainPage from '@/views/MainPage.vue'
-
-// Пока для страницы преподавателя создаём заглушку (позже можно добавить реальную реализацию)
-const TeacherPage = {
-	template: '<div>Страница преподавателя (будет реализована позже)</div>',
-}
+import TeacherPage from '@/views/TeacherPage.vue'
 
 const routes = [
 	{
