@@ -8,11 +8,10 @@
 
       <div v-if="role === 'student'">
         <h2>Список преподавателей</h2>
-        <input type="number" v-model="idStudent" placeholder="Введите ваш ID">
+        <input type="number" v-model="idStudent" placeholder="Введите ваш ID" class="input-field">
         <h3>Выберите преподавателя:</h3>
         <div class="card-container">
           <router-link v-for="teacher in teachers" :key="teacher.id" :to="`/teacher/${teacher.id}`" class="card">
-            <!--<img :src="teacher.photoUrl || 'default-photo.jpg'" alt="Фото преподавателя" class="card-photo" />-->
             <div class="card-content">
               <h2>{{ teacher.secondName }} {{ teacher.firstName }} {{ teacher.patronymic }}</h2>
               <p>{{ teacher.description }}</p>
@@ -22,13 +21,12 @@
       </div>
 
       <div v-if="role === 'teacher'">
-        <input type="number" v-model="idTeacher" placeholder="Введите ваш ID">
+        <input type="number" v-model="idTeacher" placeholder="Введите ваш ID" class="input-field">
         <h2>Студенты</h2>
-        <button @click="fetchStudents">Загрузить студентов</button>
+        <button @click="fetchStudents" class="action-button">Загрузить студентов</button>
         <h3>Список студентов, которые хотят к вам пойти:</h3>
         <div class="card-container">
           <router-link v-for="student in students" :key="student.id" :to="`/student/${student.id}`" class="card">
-            <!--<img :src="teacher.photoUrl || 'default-photo.jpg'" alt="Фото преподавателя" class="card-photo" />-->
             <div class="card-content">
               <h2>{{ student.secondName }} {{ student.firstName }} {{ student.patronymic }}</h2>
               <p>{{ student.description }}</p>
@@ -47,7 +45,6 @@ import axios from 'axios';
 import { mockTeachers, mockStudents } from '../types.js';
 
 export default {
-  
   name: 'MainPage',
   setup() {
     const teachers = ref([]);
@@ -55,7 +52,6 @@ export default {
     const role = ref('student'); // Режим по умолчанию – студент
     const idStudent = ref("");
     const idTeacher = ref("");
-
 
     const fetchTeachers = async () => {
       try {
@@ -70,12 +66,12 @@ export default {
 
     const fetchStudents = async () => {
       if (!idTeacher.value) {
-    console.warn('Введите ID преподавателя');
-    return;
-  }
+        console.warn('Введите ID преподавателя');
+        return;
+      }
       try {
         const response = await axios.get(`http://localhost:8080/request/in-process/teacher/${idTeacher.value}`);
-        console.log(idTeacher.value)
+        console.log(idTeacher.value);
         console.log('Полученные данные студентов:', response.data);
         students.value = response.data;
       } catch (error) {
@@ -90,43 +86,83 @@ export default {
 
     onMounted(() => {
       fetchTeachers();
-      
     });
 
-    
-
-    return { teachers, students, role, setRole,idStudent,idTeacher,fetchStudents };
+    return { teachers, students, role, setRole, idStudent, idTeacher, fetchStudents };
   }
 };
 </script>
 
 <style scoped>
+/* Основные стили */
 .main-page {
   padding: 20px;
   font-family: Arial, sans-serif;
+  background: linear-gradient(145deg, #f9fafb, #e0e4e8); /* Градиентный фон */
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
+/* Переключатель ролей */
 .role-switcher {
   margin-bottom: 20px;
+  display: flex;
+  gap: 10px;
 }
 
 .role-switcher button {
-  margin-right: 10px;
-  padding: 8px 16px;
+  padding: 10px 20px;
   cursor: pointer;
-  border: 1px solid #007bff;
-  background-color: #fff;
-  color: #007bff;
-  border-radius: 4px;
-  transition: background-color 0.2s, color 0.2s;
+  border: none;
+  background: linear-gradient(145deg, #4e54c8, #8f94fb);
+  color: #ffffff;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
 }
 
-.role-switcher button.active,
+.role-switcher button::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 300%;
+  height: 300%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.3), transparent 70%);
+  transform: translate(-50%, -50%) scale(0);
+  transition: transform 0.5s ease;
+}
+
+.role-switcher button:hover::after {
+  transform: translate(-50%, -50%) scale(1);
+}
+
 .role-switcher button:hover {
-  background-color: #007bff;
-  color: #fff;
+  box-shadow: 0 4px 15px rgba(78, 84, 200, 0.5); /* Тень при наведении */
 }
 
+.role-switcher button.active {
+  background: linear-gradient(145deg, #8f94fb, #4e54c8); /* Инвертированный градиент для активной кнопки */
+}
+
+/* Поле ввода */
+.input-field {
+  width: 98.5%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 1em;
+  margin-bottom: 20px;
+  transition: border-color 0.3s ease;
+}
+
+.input-field:focus {
+  border-color: #4e54c8;
+  outline: none;
+}
+
+/* Карточки */
 .card-container {
   display: flex;
   flex-wrap: wrap;
@@ -138,33 +174,81 @@ export default {
   width: 250px;
   text-decoration: none;
   border: 1px solid #ddd;
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
-  transition: box-shadow 0.2s;
-  color: inherit;
+  transition: all 0.3s ease;
+  background: #ffffff;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .card:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
-
-.card-photo {
-  width: 100%;
-  height: 150px;
-  object-fit: cover;
+  transform: translateY(-5px);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
 }
 
 .card-content {
-  padding: 10px;
+  padding: 20px;
 }
 
 .card-content h2 {
   font-size: 1.2em;
   margin: 0 0 10px;
+  color: #2c3e50; /* Темный цвет для заголовка */
 }
 
 .card-content p {
   font-size: 0.9em;
   color: #555;
+  margin: 5px 0;
+}
+
+/* Кнопка "Загрузить студентов" */
+.action-button {
+  background: linear-gradient(145deg, #4e54c8, #8f94fb);
+  color: #ffffff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.action-button::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 300%;
+  height: 300%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.3), transparent 70%);
+  transform: translate(-50%, -50%) scale(0);
+  transition: transform 0.5s ease;
+}
+
+.action-button:hover::after {
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.action-button:hover {
+  box-shadow: 0 4px 15px rgba(78, 84, 200, 0.5); /* Тень при наведении */
+}
+
+/* Анимации */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.main-page {
+  animation: fadeIn 0.5s ease-in-out;
 }
 </style>

@@ -12,7 +12,7 @@
       <ul v-if="teacher?.topics?.length">
         <li v-for="topic in teacher.topics" :key="topic">{{ topic }}</li>
       </ul>
-      <input type="text">
+      <input type="text" placeholder="Введите сопроводительное письмо">
       <button @click="submitApplication" v-if="!applicationSent">Подать заявку</button>
       <button @click="cancelApplication" v-else>Отменить заявку</button>
       <p v-if="applicationMessage" class="status-message">{{ applicationMessage }}</p>
