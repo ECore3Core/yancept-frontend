@@ -5,6 +5,7 @@
       <SideMenu class="sidebar" />
       <div class="main">
         <router-view v-if="$route.name === 'TeacherPage'" />
+        <router-view v-else-if="$route.name === 'StudentPage'" />
         <MainPage v-else />
       </div>
     </div>
