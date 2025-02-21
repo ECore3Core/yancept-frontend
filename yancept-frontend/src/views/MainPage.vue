@@ -1,51 +1,87 @@
 <template>
   <main>
-  <div class="main-page">
-    <h2>Список преподавателей</h2>
-    <div class="card-container">
-      <router-link
-        v-for="teacher in teachers"
-        :key="teacher.id"
-        :to="`/teacher/${teacher.id}`"
-        class="card"
-      >
-        <img :src="teacher.photoUrl" alt="Фото преподавателя" class="card-photo" />
-        <div class="card-content">
-          <h2>{{ teacher.lastName }} {{ teacher.firstName }} {{ teacher.middleName }}</h2>
-          <p>{{ teacher.description }}</p>
+    <div class="main-page">
+      <h2>Список преподавателей</h2>
+      <div class="role-switcher">
+        <button @click="setRole('student')" :class="{ active: role === 'student' }">Студент</button>
+        <button @click="setRole('teacher')" :class="{ active: role === 'teacher' }">Преподаватель</button>
+      </div>
+
+      <div v-if="role === 'student'">
+        <h3>Выберите преподавателя:</h3>
+        <div class="card-container">
+          <router-link
+            v-for="teacher in teachers"
+            :key="teacher.id"
+            :to="`/teacher/${teacher.id}`"
+            class="card"
+          >
+            <img :src="teacher.photoUrl" alt="Фото преподавателя" class="card-photo" />
+            <div class="card-content">
+              <h2>{{ teacher.lastName }} {{ teacher.firstName }} {{ teacher.middleName }}</h2>
+              <p>{{ teacher.description }}</p>
+              <ul>
+                <li v-for="topic in teacher.topics" :key="topic">{{ topic }}</li>
+              </ul>
+            </div>
+          </router-link>
         </div>
-      </router-link>
+      </div>
+
+      <div v-if="role === 'teacher'">
+        <h3>Список студентов</h3>
+        <ul>
+          <li v-for="student in students" :key="student.id">
+            {{ student.lastName }} {{ student.firstName }} (GPA: {{ student.gpa }})
+          </li>
+        </ul>
+      </div>
     </div>
-  </div>
-</main>
+  </main>
 </template>
 
 <script>
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
+import { mockTeachers, mockStudents } from '../types.js'
 
 export default {
   name: 'MainPage',
   setup() {
     const teachers = ref([])
+    const students = ref([])
+    const role = ref('student')  // Переключение ролей
 
-    // Функция для получения списка преподавателей с backend сервера
     const fetchTeachers = async () => {
       try {
         const response = await axios.get('https://your-backend-api.com/api/teachers')
         teachers.value = response.data
       } catch (error) {
-        console.error('Ошибка загрузки преподавателей:', error)
+        console.warn('Бэкенд недоступен, загружаем мок-данные')
+        teachers.value = mockTeachers
       }
+    }
+
+    const fetchStudents = async () => {
+      try {
+        const response = await axios.get('https://your-backend-api.com/api/students')
+        students.value = response.data
+      } catch (error) {
+        console.warn('Бэкенд недоступен, загружаем мок-данные')
+        students.value = mockStudents
+      }
+    }
+
+    const setRole = (newRole) => {
+      role.value = newRole
     }
 
     onMounted(() => {
       fetchTeachers()
+      fetchStudents()
     })
 
-    return {
-      teachers
-    }
+    return { teachers, students, role, setRole }
   }
 }
 </script>
@@ -55,13 +91,27 @@ export default {
   padding: 20px;
 }
 
+.role-switcher {
+  margin-bottom: 20px;
+}
+
+.role-switcher button {
+  margin-right: 10px;
+  padding: 8px 16px;
+  cursor: pointer;
+}
+
+.role-switcher button.active {
+  background-color: #007bff;
+  color: white;
+}
+
 .card-container {
   display: flex;
   flex-wrap: wrap;
   gap: 20px;
 }
 
-/* Стили карточки */
 .card {
   display: block;
   width: 250px;
