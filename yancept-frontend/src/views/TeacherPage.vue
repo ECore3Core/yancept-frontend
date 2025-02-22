@@ -2,19 +2,22 @@
   <div class="teacher-profile" v-if="teacher">
     <button @click="$router.push('/')" class="back-button">Назад</button>
     <h2 class="profile-title">Детали преподавателя</h2>
-
     <div class="profile-content">
       <img v-if="teacher.photoUrl" :src="teacher.photoUrl" alt="Фото преподавателя" class="profile-photo" />
       <div class="card-content">
         <h2 class="teacher-name">{{ teacher.secondName }} {{ teacher.firstName }} {{ teacher.patronymic }}</h2>
-        <p class="teacher-info">Подробная информация о преподавателе</p>
+        <p class="teacher-info">{{ teacher.description }}</p>
+        <p class="teacher-info">
+          <a :href="teacher.linkToProfile" target="_blank">Ссылка на профиль преподавателя</a>
+        </p>
       </div>
 
       <ul class="topics-list" v-if="teacher?.topics?.length">
         <li v-for="topic in teacher.topics" :key="topic" class="topic-item">{{ topic }}</li>
       </ul>
-
-      <input type="text" placeholder="Введите сопроводительное письмо" class="application-input" />
+      <input type="number" v-model="idStudent" placeholder="Введите ваш ID студента" class="input-field">
+      <input type="text" placeholder="Введите сопроводительное письмо" class="application-input"
+        v-model="applicationText" />
       <button @click="submitApplication" v-if="!applicationSent" class="application-button">Подать заявку</button>
       <button @click="cancelApplication" v-else class="application-button cancel-button">Отменить заявку</button>
       <p v-if="applicationMessage" class="status-message">{{ applicationMessage }}</p>
@@ -39,43 +42,92 @@ export default {
     const teacher = ref(null)
     const applicationSent = ref(false)
     const applicationMessage = ref("")
+    const applicationText = ref("") // Текст сопроводительного письма
+    const idStudent = ref("")
+    const idRequest = ref("")
 
     const fetchTeacher = async () => {
       try {
-        const response = await axios.get(`http://localhost:8080/teacher/${route.params.id}`);
-        console.log("Полученные данные о преподавателе:", response.data);
-        teacher.value = response.data;
+        const response = await axios.get(`http://localhost:8080/teacher/${route.params.id}`)
+        console.log("Полученные данные о преподавателе:", response.data)
+        teacher.value = response.data
       } catch (error) {
-        console.warn('Бэкенд недоступен, загружаем мок-данные');
-        teacher.value = mockTeachers.find(t => t.id == route.params.id);
-        console.log("Загружены мок-данные:", teacher.value);
+        console.warn('Бэкенд недоступен, загружаем мок-данные')
+        const mockData = mockTeachers.find(t => t.id == route.params.id)
+        teacher.value = mockData || { firstName: "Неизвестно", secondName: "", patronymic: "", description: "Нет данных" }
+
+        console.log("Загружены мок-данные:", teacher.value)
       }
-    };
+    }
 
     const submitApplication = async () => {
+      const studentId = Number(idStudent.value)
+      applicationMessage.value = ""
+      if (!idStudent.value) {
+        applicationMessage.value = "Введите ваш ID"
+        return
+      }
+
+      if (!applicationText.value.trim()) {
+        applicationMessage.value = "Введите сопроводительное письмо"
+        return
+      }
+
       try {
-        await axios.post('https://your-backend-api.com/api/applications', { teacherId: teacher.value.id })
+        const response = await axios.post(`http://localhost:8080/request/student/${studentId}/teacher/${teacher.value.id}`, {
+      message: applicationText.value
+    });
+        idRequest.value = response.data.id;
+        localStorage.setItem('idRequest', response.data.id)
         applicationSent.value = true
         applicationMessage.value = "Заявка успешно отправлена!"
       } catch (error) {
+        console.error("Ошибка отправки заявки:", error)
         applicationMessage.value = "Ошибка отправки заявки"
       }
     }
 
     const cancelApplication = async () => {
+      if (!idStudent.value) {
+        applicationMessage.value = "Введите ваш ID перед отменой заявки"
+        return
+      }
+
       try {
-        await axios.delete(`https://your-backend-api.com/api/applications/${teacher.value.id}`)
-        applicationSent.value = false
-        applicationMessage.value = "Заявка отменена"
+        await axios.delete(`http://localhost:8080/request/${idRequest.value}`);
+        applicationSent.value = false;
+        applicationMessage.value = "Заявка отменена";
+        applicationText.value = ""; // Очистка поля ввода
+        idRequest.value = ""; // Очистка ID заявки
       } catch (error) {
+        console.error("Ошибка отмены заявки:", error)
         applicationMessage.value = "Ошибка отмены заявки"
       }
     }
+    const checkApplicationStatus = async () => {
+      try {
+        const response = await axios.get(`http://localhost:8080/request/status/student/${idStudent.value}/teacher/${teacher.value.id}`)
+        applicationSent.value = response.data.sent
+      } catch (error) {
+        console.error("Ошибка при проверке статуса заявки:", error)
+      }
+    }
+
 
     onMounted(fetchTeacher)
 
-    return { teacher, applicationSent, applicationMessage, submitApplication, cancelApplication }
-  }
+    return {
+      teacher,
+      applicationSent,
+      applicationMessage,
+      applicationText,
+      idStudent,
+      submitApplication,
+      cancelApplication,
+      checkApplicationStatus,
+      idRequest
+    }
+  },
 }
 </script>
 
@@ -83,9 +135,11 @@ export default {
 /* Основной контейнер */
 .teacher-profile {
   padding: 20px;
-  background: linear-gradient(145deg, #ffffff, #f0f4f8); /* Градиентный фон */
+  background: linear-gradient(145deg, #ffffff, #f0f4f8);
+  /* Градиентный фон */
   border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Тень */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  /* Тень */
   max-width: 800px;
   margin: 20px auto;
   animation: fadeIn 0.5s ease-in-out;
@@ -122,15 +176,18 @@ export default {
 }
 
 .back-button:hover {
-  box-shadow: 0 4px 15px rgba(78, 84, 200, 0.5); /* Тень при наведении */
+  box-shadow: 0 4px 15px rgba(78, 84, 200, 0.5);
+  /* Тень при наведении */
 }
 
 /* Заголовок страницы */
 .profile-title {
   font-size: 2em;
   font-weight: bold;
-  color: #2c3e50; /* Темный цвет для заголовка */
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1); /* Тень для текста */
+  color: #2c3e50;
+  /* Темный цвет для заголовка */
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+  /* Тень для текста */
   margin-bottom: 20px;
 }
 
@@ -148,14 +205,16 @@ export default {
   height: 200px;
   object-fit: cover;
   border-radius: 50%;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Тень для фото */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  /* Тень для фото */
 }
 
 /* Имя преподавателя */
 .teacher-name {
   font-size: 1.5em;
   font-weight: bold;
-  color: #2c3e50; /* Темный цвет для текста */
+  color: #2c3e50;
+  /* Темный цвет для текста */
   margin: 10px 0;
 }
 
@@ -164,6 +223,16 @@ export default {
   font-size: 1em;
   color: #555;
   text-align: center;
+}
+
+.teacher-info a {
+  color: #4e54c8;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.teacher-info a:hover {
+  color: #8f94fb;
 }
 
 /* Список тем */
@@ -204,7 +273,8 @@ export default {
 }
 
 .topic-item:hover {
-  box-shadow: 0 4px 15px rgba(78, 84, 200, 0.5); /* Тень при наведении */
+  box-shadow: 0 4px 15px rgba(78, 84, 200, 0.5);
+  /* Тень при наведении */
 }
 
 /* Поле для ввода сопроводительного письма */
@@ -248,15 +318,18 @@ export default {
 }
 
 .application-button:hover {
-  box-shadow: 0 4px 15px rgba(78, 84, 200, 0.5); /* Тень при наведении */
+  box-shadow: 0 4px 15px rgba(78, 84, 200, 0.5);
+  /* Тень при наведении */
 }
 
 .cancel-button {
-  background: linear-gradient(145deg, #dc3545, #c82333); /* Градиент для кнопки отмены */
+  background: linear-gradient(145deg, #dc3545, #c82333);
+  /* Градиент для кнопки отмены */
 }
 
 .cancel-button:hover {
-  box-shadow: 0 4px 15px rgba(220, 53, 69, 0.5); /* Тень при наведении */
+  box-shadow: 0 4px 15px rgba(220, 53, 69, 0.5);
+  /* Тень при наведении */
 }
 
 /* Сообщение о статусе заявки */
@@ -280,6 +353,7 @@ export default {
     opacity: 0;
     transform: translateY(-20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);

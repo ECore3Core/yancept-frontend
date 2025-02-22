@@ -18,6 +18,7 @@
             </div>
           </router-link>
         </div>
+    
       </div>
 
       <div v-if="role === 'teacher'">
@@ -67,7 +68,7 @@ export default {
     const role = ref('student'); // Режим по умолчанию – студент
     const idStudent = ref("");
     const idTeacher = ref("");
-
+    
     const fetchTeachers = async () => {
       try {
         const response = await axios.get('http://localhost:8080/teacher');

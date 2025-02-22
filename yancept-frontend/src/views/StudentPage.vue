@@ -37,7 +37,6 @@
       <p v-if="applicationMessage" class="status-message">{{ applicationMessage }}</p>
     </div>
   </div>
-
   <div v-else class="loading-message">
     <p>Загрузка данных...</p>
   </div>
@@ -57,6 +56,8 @@ export default {
     const applicationMessage = ref("")
     const showRejectModal = ref(false) // Открытие модального окна для отказа
     const rejectReason = ref("") // Причина отказа
+    const idRequest = localStorage.getItem('idRequest')
+    console.log("ID заявки:", idRequest)
 
     const fetchStudent = async () => {
       try {
@@ -73,7 +74,7 @@ export default {
     // Принять студента
     const acceptStudent = async () => {
       try {
-        await axios.post('https://your-backend-api.com/api/accept-student', { studentId: student.value.id });
+        await axios.post(`http://localhost:8080/request/accept/${idRequest.value}`);
         applicationMessage.value = "Студент успешно принят!";
       } catch (error) {
         applicationMessage.value = "Ошибка при принятии студента";
@@ -99,10 +100,7 @@ export default {
       }
 
       try {
-        await axios.post('https://your-backend-api.com/api/reject-student', {
-          studentId: student.value.id,
-          reason: rejectReason.value,
-        });
+        await axios.post(`http://localhost:8080/reject/accept/${idRequest.value}`);
         applicationMessage.value = "Студенту отправлен отказ с причиной: " + rejectReason.value;
         closeRejectModal();
       } catch (error) {
@@ -121,6 +119,7 @@ export default {
       openRejectModal,
       closeRejectModal,
       rejectStudent,
+      idRequest
     };
   },
 };
